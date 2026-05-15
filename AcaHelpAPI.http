@@ -1,0 +1,6 @@
+@AcaHelpAPI_HostAddress = http://localhost:5296
+
+GET {{AcaHelpAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
