@@ -7,7 +7,7 @@ namespace AcaHelpAPI.DTOs
         public required string token { get; set; }
         public required DateTime date { get; set; } 
 
-        public required DateTime expiresIn {  get; set; }
+        public required DateTime expiresAt {  get; set; }
     }
     public class LoginDTO
     {

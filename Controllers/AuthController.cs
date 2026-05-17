@@ -48,7 +48,7 @@ namespace AcaHelpAPI.Controllers
                 }
                 var expirationDate = DateTime.UtcNow.AddMinutes(60);
                 var token = GenerateToken(user, expirationDate);
-                var data = new LoginResponseDTO { date = DateTime.UtcNow, token = token, expiresIn= expirationDate };
+                var data = new LoginResponseDTO { date = DateTime.UtcNow, token = token, expiresAt= expirationDate };
                 var payloadResponse = ApiResponse<LoginResponseDTO>.SuccessResponse(data, "USER_LOGGED_IN" , "Usuario logueado exitosamente");
                 return Ok(payloadResponse);
 
