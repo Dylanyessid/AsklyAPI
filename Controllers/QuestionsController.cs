@@ -91,17 +91,28 @@ namespace AcaHelpAPI.Controllers
 
             var question = new Question
             {
-                Body = questionDto.Body,
-                Subject = questionDto.Subject,
+                Body = questionDto.body,
                 IsSolved = false,
-                Title = questionDto.Title,
+                Title = questionDto.title,
+                TagId = questionDto.tagId,
                 UserId = int.Parse(stringUserId)
             };
 
             _context.Questions.Add(question);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetQuestion", new { id = question.Id }, question);
+            var responseData = new CreateQuestionResponseDTO
+            {
+                id = question.Id,
+                body = question.Body,
+                tagId = question.TagId,
+                title = question.Title,
+                userId = question.UserId,
+                createdAt = question.CreatedAt,
+                UpdatedAt = question.UpdatedAt
+            };
+            var responsePayload = ApiResponse<CreateQuestionResponseDTO>.SuccessResponse(responseData, "QUESTION_CREATED", "Question created successfully");
+            return CreatedAtAction("GetQuestion", new { id = question.Id }, responsePayload);
         }
 
         // DELETE: api/Questions/5

@@ -30,7 +30,11 @@ builder.Services.AddDbContext<MiDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions( options => {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    })
+    ;
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -52,6 +56,21 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ClockSkew = TimeSpan.Zero 
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            var payload = ApiResponse<object>.ErrorResponse("Token de autenticación inválido o expirado", "INVALID_TOKEN", null);
+            return context.Response.WriteAsync(JsonSerializer.Serialize(payload, new JsonSerializerOptions { 
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            }));
+        }
+    };
+
 });
 
 

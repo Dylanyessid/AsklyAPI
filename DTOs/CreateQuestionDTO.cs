@@ -6,14 +6,31 @@ namespace AcaHelpAPI.DTOs
     {
         [Required]
         [MinLength(10)]
-        public string Title { get; set; }
+        public string title { get; set; }
 
 
         [Required]
-        public string Body { get; set; }
+        public string body { get; set; }
 
         [Required]
-        public string Subject { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "TagId must be a positive integer.")]
+        public int tagId { get; set; }
 
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "UserId must be a positive integer.")]
+        public int userId { get; set; }
+
+
+    }
+
+    public class CreateQuestionResponseDTO
+    {
+        public required int id { get; set; }
+        public string title { get; set; } = string.Empty;
+        public string body { get; set; } = string.Empty;
+        public int tagId { get; set; }
+        public int userId { get; set; }
+        public DateTime createdAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
     }
 }
