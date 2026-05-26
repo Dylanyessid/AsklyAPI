@@ -25,6 +25,14 @@ builder.Services.AddCors(options =>
 var jwtConfig = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtConfig["Key"]!);
 
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+    options.InstanceName = "AcaHelpAPI_";
+});
+
 // Add services to the container.
 builder.Services.AddDbContext<MiDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
