@@ -1,4 +1,5 @@
 using AcaHelpAPI.Data;
+using AcaHelpAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -80,7 +81,7 @@ builder.Services.AddAuthentication(options =>
     };
 
 });
-
+builder.Services.AddScoped<ICacheService, RedisService>();
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>

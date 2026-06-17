@@ -82,13 +82,8 @@ namespace AcaHelpAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Question>> PostQuestion(CreateQuestionDTO questionDto)
         {
-
-            var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (stringUserId==null)
-            {
-                return BadRequest();
-            }
-
+            var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+           
             var question = new Question
             {
                 Body = questionDto.body,

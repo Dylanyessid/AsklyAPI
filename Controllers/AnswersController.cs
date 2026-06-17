@@ -23,11 +23,7 @@ namespace AcaHelpAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> PostAnswer(int questionId, CreateAnswerDTO dto)
         {
-            var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (stringUserId == null || !int.TryParse(stringUserId, out var userId))
-            {
-                return Unauthorized(ApiResponse<object>.ErrorResponse("Usuario no autenticado", "UNAUTHORIZED"));
-            }
+            var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
             var question = await _context.Questions.FindAsync(questionId);
             if (question == null)
@@ -38,7 +34,7 @@ namespace AcaHelpAPI.Controllers
             var answer = new Answer
             {
                 QuestionId = questionId,
-                UserId = userId,
+                UserId = int.Parse(stringUserId),
                 Body = dto.Body,
                 IsAccepted = false,
                 VoteCount = 0,

@@ -26,7 +26,7 @@ namespace AcaHelpAPI.Services
             var options = new DistributedCacheEntryOptions();
             if (expirationTime.HasValue)
             {
-                options.SetAbsoluteExpiration(expirationTime.Value);
+                options.AbsoluteExpirationRelativeToNow = expirationTime.Value;
             }
             var serializedItem = System.Text.Json.JsonSerializer.Serialize(item);
             await _cache.SetStringAsync(key, serializedItem, options);

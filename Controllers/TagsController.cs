@@ -2,6 +2,7 @@
 using AcaHelpAPI.DTOs;
 using AcaHelpAPI.Helpers;
 using AcaHelpAPI.Models;
+using AcaHelpAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,20 +18,36 @@ namespace AcaHelpAPI.Controllers
     public class TagsController : ControllerBase
     {
         private readonly MiDbContext _context;
+        private readonly ICacheService _cacheService;
 
-        public TagsController(MiDbContext context)
+        public TagsController(MiDbContext context, ICacheService cacheService)
         {
             _context = context;
+            _cacheService = cacheService;
         }
 
         // GET: api/Tags
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tag>>> GetTags()
         {
+            string cacheKey = "all_tags";
+
+            var cachedTags = await _cacheService.GetItemInCache<List<GetTagResponseDTO>>(cacheKey);
+            
+            if (cachedTags != null)
+            {
+                var cachedResponseData = new GetMultipleTagsResponseDTO
+                {
+                    tags = cachedTags
+                };
+                return Ok(ApiResponse<GetMultipleTagsResponseDTO>.SuccessResponse(cachedResponseData, ApiSuccessResponseCodes.TAGS_GIVEN.ToString(), ""));
+            }
+
             var tags = await _context.Tags.ToListAsync();
             var responseTags = tags.Select(tag => new GetTagResponseDTO { id = tag.Id, name = tag.Name }).ToList();
-
-
+ 
+            
+            await _cacheService.SetItemInCache(cacheKey, responseTags, TimeSpan.FromHours(1));
             var responseData = new GetMultipleTagsResponseDTO
             {
                 tags = responseTags,
