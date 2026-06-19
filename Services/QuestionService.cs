@@ -15,25 +15,18 @@ namespace AcaHelpAPI.Services
 
         public async Task<Question> CreateQuestion(int userId, CreateQuestionDTO data)
         {
-            try
+            var question = new Question
             {
-                var question = new Question
-                {
-                    Body = data.body,
-                    IsSolved = false,
-                    Title = data.title,
-                    TagId = data.tagId,
-                    UserId = userId
-                };
+                Body = data.body,
+                IsSolved = false,
+                Title = data.title,
+                TagId = data.tagId,
+                UserId = userId
+            };
 
-                _context.Questions.Add(question);
-                await _context.SaveChangesAsync();
-            }
-            catch
-            {
-
-            }
-            throw new NotImplementedException();
+            _context.Questions.Add(question);
+            await _context.SaveChangesAsync();
+            return question;
         }
 
         Task<Question> IQuestionService.GetQuestionByIdAsync(int questionId)

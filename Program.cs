@@ -36,7 +36,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 builder.Services.AddExceptionHandler<ExceptionHandler>();
-
+builder.Services.AddProblemDetails();
 
 // Add services to the container.
 builder.Services.AddDbContext<MiDbContext>(options =>
@@ -85,7 +85,9 @@ builder.Services.AddAuthentication(options =>
     };
 
 });
+
 builder.Services.AddScoped<ICacheService, RedisService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>

@@ -1,6 +1,6 @@
 namespace AcaHelpAPI.Models
 {
-    public class Answer
+    public class Answer: BaseModel
     {
         public int Id { get; set; }
         public int QuestionId { get; set; }
@@ -8,8 +8,6 @@ namespace AcaHelpAPI.Models
         public string Body { get; set; }
         public bool IsAccepted { get; set; }
         public int VoteCount { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public DateTime? DeletedAt { get; set; }
+     
     }
 }

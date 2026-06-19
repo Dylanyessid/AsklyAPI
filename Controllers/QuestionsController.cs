@@ -10,6 +10,7 @@ using AcaHelpAPI.Models;
 using AcaHelpAPI.DTOs;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using AcaHelpAPI.Services;
 
 namespace AcaHelpAPI.Controllers
 {
@@ -18,10 +19,12 @@ namespace AcaHelpAPI.Controllers
     public class QuestionsController : ControllerBase
     {
         private readonly MiDbContext _context;
+        private readonly IQuestionService _questionService;
 
-        public QuestionsController(MiDbContext context)
+        public QuestionsController(MiDbContext context, IQuestionService questionService)
         {
             _context = context;
+            _questionService = questionService;
         }
 
         // GET: api/Questions
@@ -83,31 +86,23 @@ namespace AcaHelpAPI.Controllers
         public async Task<ActionResult<Question>> PostQuestion(CreateQuestionDTO questionDto)
         {
             var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-           
-            var question = new Question
-            {
-                Body = questionDto.body,
-                IsSolved = false,
-                Title = questionDto.title,
-                TagId = questionDto.tagId,
-                UserId = int.Parse(stringUserId)
-            };
 
-            _context.Questions.Add(question);
-            await _context.SaveChangesAsync();
+
+            var result = await this._questionService.CreateQuestion(int.Parse(stringUserId), questionDto);
+           
 
             var responseData = new CreateQuestionResponseDTO
             {
-                id = question.Id,
-                body = question.Body,
-                tagId = question.TagId,
-                title = question.Title,
-                userId = question.UserId,
-                createdAt = question.CreatedAt,
-                UpdatedAt = question.UpdatedAt
+                id = result.Id,
+                body = result.Body,
+                tagId = result.TagId,
+                title = result.Title,
+                userId = result.UserId,
+                createdAt = result.CreatedAt,
+                UpdatedAt = result.UpdatedAt
             };
             var responsePayload = ApiResponse<CreateQuestionResponseDTO>.SuccessResponse(responseData, "QUESTION_CREATED", "Question created successfully");
-            return CreatedAtAction("GetQuestion", new { id = question.Id }, responsePayload);
+            return CreatedAtAction("GetQuestion", new { id = result.Id }, responsePayload);
         }
 
         // DELETE: api/Questions/5
