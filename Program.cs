@@ -1,3 +1,4 @@
+using AcaHelpAPI.Controllers;
 using AcaHelpAPI.Data;
 using AcaHelpAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = redisConnectionString;
     options.InstanceName = "AcaHelpAPI_";
 });
+
+builder.Services.AddExceptionHandler<ExceptionHandler>();
+
 
 // Add services to the container.
 builder.Services.AddDbContext<MiDbContext>(options =>
@@ -111,6 +115,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
+builder.Host.UseDefaultServiceProvider(opts =>
+{
+    opts.ValidateScopes = true;   
+    opts.ValidateOnBuild = true;     
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -123,7 +133,7 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
-
+app.UseExceptionHandler();
 app.MapControllers();
 
 app.UseAuthentication();
