@@ -1,6 +1,7 @@
 using AcaHelpAPI.Data;
 using AcaHelpAPI.DTOs;
 using AcaHelpAPI.Models;
+using AcaHelpAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,36 @@ namespace AcaHelpAPI.Controllers
     public class AnswersController : ControllerBase
     {
         private readonly MiDbContext _context;
+        private readonly IAnswerService _answerService;
 
-        public AnswersController(MiDbContext context)
+        public AnswersController(MiDbContext context, IAnswerService answerService)
         {
             _context = context;
+            _answerService = answerService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAnswers(int questionId, [FromQuery] int limit = 20, [FromQuery] string? cursor = null)
+        {
+            var questionExists = await _context.Questions.AnyAsync(question => question.Id == questionId);
+            if (!questionExists)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("Pregunta no encontrada", "QUESTION_NOT_FOUND"));
+            }
+
+            try
+            {
+                var page = await _answerService.GetAnswersByQuestionAsync(questionId, limit, cursor);
+                return Ok(ApiResponse<AnswerListPageDTO>.SuccessResponse(page, "ANSWERS_GIVEN", "Respuestas obtenidas exitosamente"));
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Cursor inválido", "INVALID_CURSOR"));
+            }
+            catch (FormatException)
+            {
+                return BadRequest(ApiResponse<object>.ErrorResponse("Cursor inválido", "INVALID_CURSOR"));
+            }
         }
 
         [Authorize]

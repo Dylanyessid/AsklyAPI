@@ -88,6 +88,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<ICacheService, RedisService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IAnswerService, AnswerService>();
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
