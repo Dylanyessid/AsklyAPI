@@ -50,4 +50,26 @@ namespace AcaHelpAPI.DTOs
         public string? NextCursor { get; set; }
         public bool HasMore { get; set; }
     }
+
+    public class AnswerResponseDTO
+    {
+        public int Id { get; set; }
+        public int QuestionId { get; set; }
+        public int UserId { get; set; }
+        public string Body { get; set; } = string.Empty;
+        public bool IsAccepted { get; set; }
+        public int VoteCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
+
+    public class AnswerVoteResponseDTO
+    {
+        public int Id { get; set; }
+        public int AnswerId { get; set; }
+        public int UserId { get; set; }
+        public sbyte VoteType { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
 }

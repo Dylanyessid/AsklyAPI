@@ -29,23 +29,52 @@ namespace AcaHelpAPI.Controllers
 
         // GET: api/Questions
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Question>>> GetQuestions()
+        public async Task<IActionResult> GetQuestions()
         {
-            return await _context.Questions.ToListAsync();
+            var questions = await _context.Questions
+                .Select(question => new QuestionResponseDTO
+                {
+                    Id = question.Id,
+                    UserId = question.UserId,
+                    TagId = question.TagId,
+                    Title = question.Title,
+                    Body = question.Body,
+                    IsSolved = question.IsSolved,
+                    CreatedAt = question.CreatedAt,
+                    UpdatedAt = question.UpdatedAt,
+                    DeletedAt = question.DeletedAt
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<QuestionResponseDTO>>.SuccessResponse(questions, "QUESTIONS_GIVEN", "Questions retrieved successfully"));
         }
 
         // GET: api/Questions/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Question>> GetQuestion(int id)
+        public async Task<IActionResult> GetQuestion(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
+            var question = await _context.Questions
+                .Where(question => question.Id == id)
+                .Select(question => new QuestionResponseDTO
+                {
+                    Id = question.Id,
+                    UserId = question.UserId,
+                    TagId = question.TagId,
+                    Title = question.Title,
+                    Body = question.Body,
+                    IsSolved = question.IsSolved,
+                    CreatedAt = question.CreatedAt,
+                    UpdatedAt = question.UpdatedAt,
+                    DeletedAt = question.DeletedAt
+                })
+                .FirstOrDefaultAsync();
 
             if (question == null)
             {
-                return NotFound();
+                return NotFound(ApiResponse<object>.ErrorResponse("Pregunta no encontrada", "QUESTION_NOT_FOUND"));
             }
 
-            return question;
+            return Ok(ApiResponse<QuestionResponseDTO>.SuccessResponse(question, "QUESTION_GIVEN", "Question retrieved successfully"));
         }
 
         // PUT: api/Questions/5
@@ -83,7 +112,7 @@ namespace AcaHelpAPI.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Question>> PostQuestion(CreateQuestionDTO questionDto)
+        public async Task<IActionResult> PostQuestion(CreateQuestionDTO questionDto)
         {
             var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
@@ -102,7 +131,7 @@ namespace AcaHelpAPI.Controllers
                 UpdatedAt = result.UpdatedAt
             };
             var responsePayload = ApiResponse<CreateQuestionResponseDTO>.SuccessResponse(responseData, "QUESTION_CREATED", "Question created successfully");
-            return CreatedAtAction("GetQuestion", new { id = result.Id }, responsePayload);
+            return CreatedAtAction(nameof(GetQuestion), new { id = result.Id }, responsePayload);
         }
 
         // DELETE: api/Questions/5

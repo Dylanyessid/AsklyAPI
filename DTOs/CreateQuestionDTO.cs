@@ -33,4 +33,17 @@ namespace AcaHelpAPI.DTOs
         public DateTime createdAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
+    public class QuestionResponseDTO
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public int TagId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Body { get; set; }
+        public bool IsSolved { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public DateTime? DeletedAt { get; set; }
+    }
 }

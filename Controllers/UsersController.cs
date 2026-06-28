@@ -28,23 +28,46 @@ namespace AcaHelpAPI.Controllers
 
         // GET: api/Users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<IActionResult> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            var users = await _context.Users
+                .Select(user => new UserResponseDTO
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    CreatedAt = user.CreatedAt,
+                    UpdatedAt = user.UpdatedAt
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<List<UserResponseDTO>>.SuccessResponse(users, "USERS_GIVEN", "Users retrieved successfully"));
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<IActionResult> GetUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .Where(user => user.Id == id)
+                .Select(user => new UserResponseDTO
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    CreatedAt = user.CreatedAt,
+                    UpdatedAt = user.UpdatedAt
+                })
+                .FirstOrDefaultAsync();
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound(ApiResponse<object>.ErrorResponse("Usuario no encontrado", "USER_NOT_FOUND"));
             }
 
-            return user;
+            return Ok(ApiResponse<UserResponseDTO>.SuccessResponse(user, "USER_GIVEN", "User retrieved successfully"));
         }
 
         // PUT: api/Users/5
@@ -81,7 +104,7 @@ namespace AcaHelpAPI.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(CreateUserDTO dto)
+        public async Task<IActionResult> PostUser(CreateUserDTO dto)
         {
 
 
@@ -114,7 +137,7 @@ namespace AcaHelpAPI.Controllers
                CreatedAt = user.CreatedAt,
             };
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, ApiResponse<CreateUserResponseDTO>.SuccessResponse(responseData, "USER_CREATED" ,"Usuario creado exitosamente"));
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, ApiResponse<CreateUserResponseDTO>.SuccessResponse(responseData, "USER_CREATED" ,"Usuario creado exitosamente"));
         }
 
         // DELETE: api/Users/5

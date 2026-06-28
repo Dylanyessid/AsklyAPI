@@ -56,7 +56,17 @@ namespace AcaHelpAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(ApiResponse<AnswerVote>.SuccessResponse(vote, "ANSWER_VOTE_CREATED", "Voto registrado exitosamente"));
+            var responseData = new AnswerVoteResponseDTO
+            {
+                Id = vote.Id,
+                AnswerId = vote.AnswerId,
+                UserId = vote.UserId,
+                VoteType = vote.VoteType,
+                CreatedAt = vote.CreatedAt,
+                UpdatedAt = vote.UpdatedAt
+            };
+
+            return Ok(ApiResponse<AnswerVoteResponseDTO>.SuccessResponse(responseData, "ANSWER_VOTE_CREATED", "Voto registrado exitosamente"));
         }
     }
 }

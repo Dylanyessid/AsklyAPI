@@ -72,10 +72,22 @@ namespace AcaHelpAPI.Controllers
             _context.Answers.Add(answer);
             await _context.SaveChangesAsync();
 
+            var responseData = new AnswerResponseDTO
+            {
+                Id = answer.Id,
+                QuestionId = answer.QuestionId,
+                UserId = answer.UserId,
+                Body = answer.Body,
+                IsAccepted = answer.IsAccepted,
+                VoteCount = answer.VoteCount,
+                CreatedAt = answer.CreatedAt,
+                UpdatedAt = answer.UpdatedAt
+            };
+
             return CreatedAtAction(
                 nameof(PostAnswer),
                 new { questionId = questionId, id = answer.Id },
-                ApiResponse<Answer>.SuccessResponse(answer, "ANSWER_CREATED", "Respuesta creada exitosamente"));
+                ApiResponse<AnswerResponseDTO>.SuccessResponse(responseData, "ANSWER_CREATED", "Respuesta creada exitosamente"));
         }
 
         [Authorize]
@@ -106,7 +118,19 @@ namespace AcaHelpAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(ApiResponse<Answer>.SuccessResponse(answer, "ANSWER_UPDATED", "Respuesta actualizada exitosamente"));
+            var responseData = new AnswerResponseDTO
+            {
+                Id = answer.Id,
+                QuestionId = answer.QuestionId,
+                UserId = answer.UserId,
+                Body = answer.Body,
+                IsAccepted = answer.IsAccepted,
+                VoteCount = answer.VoteCount,
+                CreatedAt = answer.CreatedAt,
+                UpdatedAt = answer.UpdatedAt
+            };
+
+            return Ok(ApiResponse<AnswerResponseDTO>.SuccessResponse(responseData, "ANSWER_UPDATED", "Respuesta actualizada exitosamente"));
         }
     }
 }
