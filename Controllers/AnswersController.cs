@@ -46,6 +46,24 @@ namespace AcaHelpAPI.Controllers
             }
         }
 
+        [HttpGet("accepted")]
+        public async Task<IActionResult> GetAcceptedAnswer(int questionId)
+        {
+            var questionExists = await _context.Questions.AnyAsync(question => question.Id == questionId);
+            if (!questionExists)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("Pregunta no encontrada", "QUESTION_NOT_FOUND"));
+            }
+
+            var acceptedAnswer = await _answerService.GetAcceptedAnswerByQuestionAsync(questionId);
+            if (acceptedAnswer == null)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("No hay respuesta aceptada", "ACCEPTED_ANSWER_NOT_FOUND"));
+            }
+
+            return Ok(ApiResponse<AnswerListItemDTO>.SuccessResponse(acceptedAnswer, "ACCEPTED_ANSWER_GIVEN", "Respuesta aceptada obtenida exitosamente"));
+        }
+
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> PostAnswer(int questionId, CreateAnswerDTO dto)

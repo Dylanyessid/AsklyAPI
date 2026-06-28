@@ -21,7 +21,9 @@ namespace AcaHelpAPI.Services
 
             var query = _context.Answers
                 .AsNoTracking()
-                .Where(answer => answer.QuestionId == questionId)
+                .Where(answer => answer.QuestionId == questionId && answer.DeletedAt == null && !answer.IsAccepted);
+
+            query = query
                 .OrderBy(answer => answer.CreatedAt)
                 .ThenBy(answer => answer.Id)
                 .AsQueryable();
@@ -65,6 +67,28 @@ namespace AcaHelpAPI.Services
                 HasMore = hasMore,
                 NextCursor = nextCursor
             };
+        }
+
+        public async Task<AnswerListItemDTO?> GetAcceptedAnswerByQuestionAsync(int questionId)
+        {
+            return await _context.Answers
+                .AsNoTracking()
+                .Where(answer => answer.QuestionId == questionId && answer.IsAccepted && answer.DeletedAt == null)
+                .OrderByDescending(answer => answer.UpdatedAt)
+                .ThenByDescending(answer => answer.CreatedAt)
+                .ThenByDescending(answer => answer.Id)
+                .Select(answer => new AnswerListItemDTO
+                {
+                    Id = answer.Id,
+                    QuestionId = answer.QuestionId,
+                    UserId = answer.UserId,
+                    Body = answer.Body,
+                    IsAccepted = answer.IsAccepted,
+                    VoteCount = answer.VoteCount,
+                    CreatedAt = answer.CreatedAt,
+                    UpdatedAt = answer.UpdatedAt
+                })
+                .FirstOrDefaultAsync();
         }
 
         private static string EncodeCursor(DateTime createdAt, int id)
