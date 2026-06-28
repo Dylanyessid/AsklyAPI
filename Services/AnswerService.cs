@@ -1,5 +1,6 @@
 using AcaHelpAPI.Data;
 using AcaHelpAPI.DTOs;
+using AcaHelpAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text;
@@ -13,6 +14,28 @@ namespace AcaHelpAPI.Services
         public AnswerService(MiDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<AnswerResponseDTO?> GetAnswerByIdAsync(int questionId, int answerId)
+        {
+            var answer = await _context.Answers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == answerId && a.QuestionId == questionId && a.DeletedAt == null);
+            if (answer == null)
+            {
+                return null;
+            }
+            return new AnswerResponseDTO
+            {
+                Id = answer.Id,
+                QuestionId = answer.QuestionId,
+                UserId = answer.UserId,
+                Body = answer.Body,
+                IsAccepted = answer.IsAccepted,
+                VoteCount = answer.VoteCount,
+                CreatedAt = answer.CreatedAt,
+                UpdatedAt = answer.UpdatedAt
+            };
         }
 
         public async Task<AnswerListPageDTO> GetAnswersByQuestionAsync(int questionId, int pageSize, string? cursor)
@@ -89,6 +112,92 @@ namespace AcaHelpAPI.Services
                     UpdatedAt = answer.UpdatedAt
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<AnswerResponseDTO> CreateAnswerAsync(int questionId, int userId, CreateAnswerDTO dto)
+        {
+            var answer = new Answer
+            {
+                QuestionId = questionId,
+                UserId = userId,
+                Body = dto.Body,
+                IsAccepted = false,
+                VoteCount = 0
+            };
+
+            _context.Answers.Add(answer);
+            await _context.SaveChangesAsync();
+
+            return MapToResponse(answer);
+        }
+
+        public async Task<AnswerResponseDTO?> UpdateAnswerAsync(int questionId, int answerId, int userId, UpdateAnswerDTO dto)
+        {
+            var answer = await _context.Answers
+                .FirstOrDefaultAsync(a => a.Id == answerId && a.QuestionId == questionId);
+
+            if (answer == null)
+            {
+                return null;
+            }
+
+            if (answer.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("No tienes permiso para editar esta respuesta.");
+            }
+
+            answer.Body = dto.Body;
+            await _context.SaveChangesAsync();
+
+            return MapToResponse(answer);
+        }
+
+        public async Task<bool> DeleteAnswerAsync(int questionId, int answerId, int userId)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var answer = await _context.Answers
+                .FirstOrDefaultAsync(a => a.Id == answerId && a.QuestionId == questionId);
+
+            if (answer == null)
+            {
+                return false;
+            }
+
+            if (answer.UserId != userId)
+            {
+                throw new UnauthorizedAccessException("No tienes permiso para eliminar esta respuesta.");
+            }
+
+            var answerVotes = await _context.AnswerVotes
+                .Where(vote => vote.AnswerId == answerId)
+                .ToListAsync();
+
+            if (answerVotes.Count > 0)
+            {
+                _context.AnswerVotes.RemoveRange(answerVotes);
+            }
+
+            _context.Answers.Remove(answer);
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return true;
+        }
+
+        private static AnswerResponseDTO MapToResponse(Answer answer)
+        {
+            return new AnswerResponseDTO
+            {
+                Id = answer.Id,
+                QuestionId = answer.QuestionId,
+                UserId = answer.UserId,
+                Body = answer.Body,
+                IsAccepted = answer.IsAccepted,
+                VoteCount = answer.VoteCount,
+                CreatedAt = answer.CreatedAt,
+                UpdatedAt = answer.UpdatedAt
+            };
         }
 
         private static string EncodeCursor(DateTime createdAt, int id)

@@ -76,35 +76,11 @@ namespace AcaHelpAPI.Controllers
                 return NotFound(ApiResponse<object>.ErrorResponse("Pregunta no encontrada", "QUESTION_NOT_FOUND"));
             }
 
-            var answer = new Answer
-            {
-                QuestionId = questionId,
-                UserId = int.Parse(stringUserId),
-                Body = dto.Body,
-                IsAccepted = false,
-                VoteCount = 0,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            _context.Answers.Add(answer);
-            await _context.SaveChangesAsync();
-
-            var responseData = new AnswerResponseDTO
-            {
-                Id = answer.Id,
-                QuestionId = answer.QuestionId,
-                UserId = answer.UserId,
-                Body = answer.Body,
-                IsAccepted = answer.IsAccepted,
-                VoteCount = answer.VoteCount,
-                CreatedAt = answer.CreatedAt,
-                UpdatedAt = answer.UpdatedAt
-            };
+            var responseData = await _answerService.CreateAnswerAsync(questionId, int.Parse(stringUserId), dto);
 
             return CreatedAtAction(
                 nameof(PostAnswer),
-                new { questionId = questionId, id = answer.Id },
+                new { questionId = questionId, id = responseData.Id },
                 ApiResponse<AnswerResponseDTO>.SuccessResponse(responseData, "ANSWER_CREATED", "Respuesta creada exitosamente"));
         }
 
@@ -112,43 +88,60 @@ namespace AcaHelpAPI.Controllers
         [HttpPut("{answerId:int}")]
         public async Task<IActionResult> PutAnswer(int questionId, int answerId, UpdateAnswerDTO dto)
         {
+            var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var userId = int.Parse(stringUserId);
+
+            if (stringUserId == null)
+            {
+                return Unauthorized(ApiResponse<object>.ErrorResponse("Usuario no autenticado", "UNAUTHORIZED"));
+            }
+
+            var questionExists = await _answerService.GetAnswerByIdAsync(questionId, answerId);
+            if (questionExists == null)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("Pregunta no encontrada", "QUESTION_NOT_FOUND"));
+            }
+
+            if(userId != questionExists.UserId)
+            {
+                return Forbid();
+            }
+
+
+            var responseData = await _answerService.UpdateAnswerAsync(questionId, answerId, userId, dto);
+            if (responseData == null)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("Respuesta no encontrada", "ANSWER_NOT_FOUND"));
+            }
+
+            return Ok(ApiResponse<AnswerResponseDTO>.SuccessResponse(responseData, "ANSWER_UPDATED", "Respuesta actualizada exitosamente"));
+           
+        }
+
+        [Authorize]
+        [HttpDelete("{answerId:int}")]
+        public async Task<IActionResult> DeleteAnswer(int questionId, int answerId)
+        {
             var stringUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (stringUserId == null || !int.TryParse(stringUserId, out var userId))
             {
                 return Unauthorized(ApiResponse<object>.ErrorResponse("Usuario no autenticado", "UNAUTHORIZED"));
             }
 
-            var answer = await _context.Answers
-                .FirstOrDefaultAsync(a => a.Id == answerId && a.QuestionId == questionId);
-
-            if (answer == null)
+            try
             {
-                return NotFound(ApiResponse<object>.ErrorResponse("Respuesta no encontrada", "ANSWER_NOT_FOUND"));
-            }
+                var deleted = await _answerService.DeleteAnswerAsync(questionId, answerId, userId);
+                if (!deleted)
+                {
+                    return NotFound(ApiResponse<object>.ErrorResponse("Respuesta no encontrada", "ANSWER_NOT_FOUND"));
+                }
 
-            if (answer.UserId != userId)
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException)
             {
                 return Forbid();
             }
-
-            answer.Body = dto.Body;
-            answer.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            var responseData = new AnswerResponseDTO
-            {
-                Id = answer.Id,
-                QuestionId = answer.QuestionId,
-                UserId = answer.UserId,
-                Body = answer.Body,
-                IsAccepted = answer.IsAccepted,
-                VoteCount = answer.VoteCount,
-                CreatedAt = answer.CreatedAt,
-                UpdatedAt = answer.UpdatedAt
-            };
-
-            return Ok(ApiResponse<AnswerResponseDTO>.SuccessResponse(responseData, "ANSWER_UPDATED", "Respuesta actualizada exitosamente"));
         }
     }
 }

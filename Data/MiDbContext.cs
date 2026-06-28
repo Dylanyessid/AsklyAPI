@@ -22,8 +22,6 @@ public partial class MiDbContext : DbContext
     public DbSet<AnswerVote> AnswerVotes { get; set; }
     public DbSet<Tag> Tags { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Server=localhost;Database=Askly;Integrated Security=true;TrustServerCertificate=true;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

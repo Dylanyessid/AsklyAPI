@@ -1,5 +1,5 @@
 
-CREATE DATABASE Askly;
+/*CREATE DATABASE Askly;
 
 CREATE TABLE Users(
 	Id INT PRIMARY KEY IDENTITY(1,1),
@@ -37,6 +37,8 @@ CREATE TABLE Questions(
     DeletedAt DATETIME2(3) NULL
 );
 
+
+
 CREATE TABLE Answers (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     QuestionId INT NOT NULL FOREIGN KEY REFERENCES Questions(Id),
@@ -59,4 +61,71 @@ CREATE TABLE AnswerVotes (
     CONSTRAINT UQ_AnswerVotes_AnswerId_UserId
         UNIQUE (AnswerId, UserId)
 
+);*/
+
+
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) NOT NULL,
+    last_name VARCHAR(30),
+    email VARCHAR(255) UNIQUE,
+    hashed_password VARCHAR(1024),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE tags (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO tags (name) VALUES 
+    ('Matemáticas'),
+    ('Química'),
+    ('Física'),
+    ('Historia'),
+    ('Programación'),
+    ('Lenguas');
+
+CREATE TABLE questions (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id),
+    tag_id INT NOT NULL REFERENCES tags(id),
+    title VARCHAR(100) NOT NULL,
+    body VARCHAR(1500),
+    is_solved BOOLEAN NOT NULL DEFAULT FALSE,
+    language TEXT NOT NULL DEFAULT 'spanish',
+    search_vector TSVECTOR GENERATED ALWAYS AS (
+        to_tsvector(language::regconfig, coalesce(title, '') || ' ' || coalesce(body, ''))
+    ) STORED,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ NULL
+);
+
+CREATE INDEX idx_questions_search ON questions USING GIN(search_vector);
+
+CREATE TABLE answers (
+    id SERIAL PRIMARY KEY,
+    question_id INT NOT NULL REFERENCES questions(id),
+    user_id INT NOT NULL REFERENCES users(id),
+    body TEXT NOT NULL,
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    vote_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ NULL
+);
+
+CREATE TABLE answer_votes (
+    id SERIAL PRIMARY KEY,
+    answer_id INT NOT NULL REFERENCES answers(id),
+    user_id INT NOT NULL REFERENCES users(id),
+    vote_type SMALLINT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_answer_votes_answer_user UNIQUE (answer_id, user_id)
 );
